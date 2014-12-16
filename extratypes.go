@@ -49,7 +49,12 @@ func (c *NameShowCmd) UnmarshalJSON(b []byte) error {
 type NameShowReply struct {
 	Name      string `json:"name"`
 	Value     string `json:"value"`
+	Height    int    `json:"height"`
 	ExpiresIn int    `json:"expires_in"`
+	Expired   bool   `json:"expired"`
+	Address   string `json:"address"`
+	TxID      string `json:"txid"`
+	VOut      int    `json:"vout"`
 }
 
 func showReplyParser(m json.RawMessage) (interface{}, error) {
