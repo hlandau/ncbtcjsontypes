@@ -1,5 +1,5 @@
 // This package contains extensions to btcjson used by ncdns.
-package ncbtcjsonextratypes
+package ncbtcjsontypes
 
 import "github.com/hlandauf/btcjson"
 import "encoding/json"
@@ -41,9 +41,40 @@ func (c *NameShowCmd) MarshalJSON() ([]byte, error) {
 }
 
 func (c *NameShowCmd) UnmarshalJSON(b []byte) error {
-	// We don't need to implement this as we are only ever the client.
-	panic("not implemented")
+	var r btcjson.RawCmd
+	if err := json.Unmarshal(b, &r); err != nil {
+		return err
+	}
+
+	if len(r.Params) != 1 {
+		return btcjson.ErrWrongNumberOfParams
+	}
+
+	var name string
+	if err := json.Unmarshal(r.Params[0], &name); err != nil {
+		return fmt.Errorf("first argument 'name' must be a string: %v", err)
+	}
+
+	newCmd, err := NewNameShowCmd(r.Id, name)
+	if err != nil {
+		return err
+	}
+
+	*c = *newCmd
 	return nil
+}
+
+func showCmdParser(rc *btcjson.RawCmd) (btcjson.Cmd, error) {
+	if len(rc.Params) < 1 {
+		return nil, btcjson.ErrWrongNumberOfParams
+	}
+
+	var name string
+	if err := json.Unmarshal(rc.Params[0], &name); err != nil {
+		return nil, fmt.Errorf("first argument 'name' must be a string: %v", err)
+	}
+
+	return NewNameShowCmd(rc.Id, name)
 }
 
 type NameShowReply struct {
@@ -272,7 +303,7 @@ func filterReplyParser(m json.RawMessage) (interface{}, error) {
 }
 
 func init() {
-	btcjson.RegisterCustomCmd("name_show", nil, showReplyParser, "name_show <name>")
+	btcjson.RegisterCustomCmd("name_show", showCmdParser, showReplyParser, "name_show <name>")
 	btcjson.RegisterCustomCmd("name_sync", nil, syncReplyParser, "name_sync <block-hash> <count> <wait?>")
 	btcjson.RegisterCustomCmd("name_filter", nil, filterReplyParser, "name_filter <regexp> <maxage> <from> <count>")
 }
