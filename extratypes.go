@@ -231,6 +231,49 @@ func syncReplyParser(m json.RawMessage) (interface{}, error) {
 	return nsr, nil
 }
 
+// name_scan
+
+type NameScanCmd struct {
+	id    interface{}
+	From  string
+	Count int
+}
+
+func NewNameScanCmd(id interface{}, from string, count int) (*NameScanCmd, error) {
+	return &NameScanCmd{
+		id:    id,
+		From:  from,
+		Count: count,
+	}, nil
+}
+
+func (c *NameScanCmd) Id() interface{} {
+	return c.id
+}
+
+func (c *NameScanCmd) Method() string {
+	return "name_scan"
+}
+
+func (c *NameScanCmd) MarshalJSON() ([]byte, error) {
+	params := []interface{}{
+		c.From,
+		c.Count,
+	}
+
+	raw, err := btcjson.NewRawCmd(c.id, c.Method(), params)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(raw)
+}
+
+func (c *NameScanCmd) UnmarshalJSON(b []byte) error {
+	panic("not implemented")
+	return nil
+}
+
 // name_filter
 
 type NameFilterCmd struct {
@@ -306,6 +349,7 @@ func init() {
 	btcjson.RegisterCustomCmd("name_show", showCmdParser, showReplyParser, "name_show <name>")
 	btcjson.RegisterCustomCmd("name_sync", nil, syncReplyParser, "name_sync <block-hash> <count> <wait?>")
 	btcjson.RegisterCustomCmd("name_filter", nil, filterReplyParser, "name_filter <regexp> <maxage> <from> <count>")
+	btcjson.RegisterCustomCmd("name_scan", nil, filterReplyParser, "name_scan <from> <count>")
 }
 
 // © 2014 Hugo Landau <hlandau@devever.net>    GPLv3 or later
